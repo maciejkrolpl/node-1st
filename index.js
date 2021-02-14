@@ -1,14 +1,11 @@
+//  mysql://bb585779422210:8e90195a@us-cdbr-east-03.cleardb.com/heroku_f3768a999b8c5ca?reconnect=true
+
 const cool = require('cool-ascii-faces');
 const express = require('express');
 const path = require('path');
 const PORT = process.env.PORT || 5000;
-const {Pool} = require('pg');
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
+const mysql = require('mysql');
+
 
 express()
   .use(express.static(path.join(__dirname, 'public')))
@@ -18,18 +15,7 @@ express()
   .get('/cool', (req, res) => res.send(cool()))
   .get('/stream', (req, res) => res.send(cool.faceStream()))
   .get('/times', (req, res) => res.send(showTimes()))
-  .get('/db', async (req, res)=> {
-    try {
-      const client = await pool.connect();
-      const result = await client.query('SELECT * FROM test_table');
-      const results = { 'results' : (result) ? result.rows : null};
-      res.render('pages/db', results);
-      client.release();
-    } catch(error) {
-      console.error(error);
-      res.send('Error ' + error);
-    }
-  })
+  .get('/db', (req, res) => res.send(showDB()))
   .listen(PORT, () => console.log(`Listening on ${ PORT }`));
   
 showTimes = () => {
@@ -39,4 +25,22 @@ showTimes = () => {
     result += i + ' ';
   }
   return result;
+}
+
+showDB = () => {
+  console.log('im in showdb');
+  const con = mysql.createConnection({
+    host: 'us-cdbr-east-03.cleardb.com',
+    user: 'bb585779422210',
+    password: '8e90195a',
+  });
+
+
+  con.connect(function(err) {
+    if (err) {
+      console.error(err);
+      return err;
+    };
+  });
+
 }
